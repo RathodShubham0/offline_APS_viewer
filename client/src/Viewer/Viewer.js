@@ -1,13 +1,13 @@
 import React, { useEffect, useRef, useState } from "react";
 /* global Autodesk */
-
+import SvfDownloader from "../components/SvfDownloader";
 const Viewer = () => {
   const viewerDiv = useRef(null);
   const [viewer, setViewer] = useState(null);
   const [accessToken, setAccessToken] = useState(null);
 
   // Local and online model paths
-  const LOCAL_MODEL_PATH = "http://192.168.1.240:8000/output.svf"; // Ensure this is hosted via a static server with proper CORS headers
+  const LOCAL_MODEL_PATH = "http://192.168.1.240:8000/svf_bundle/bundle/output.svf"; // Ensure this is hosted via a static server with proper CORS headers
   const MODEL_URN = "dXJuOmFkc2sud2lwcHJvZDpmcy5maWxlOnZmLjZsRThNSjZuU0ZTQTNhUUczaUJWMkE_dmVyc2lvbj0x";
 
   useEffect(() => {
@@ -138,7 +138,7 @@ const Viewer = () => {
         <div className="toggle-container">
           <button onClick={handleToggle}>Toggle Model</button>
           <div id="status">Model: Online</div>
-          <button onClick={downloadSvfBundle}>Download SVF Bundle</button>
+          <SvfDownloader/>
         </div>
       </nav>
       <div id="viewerDiv" ref={viewerDiv} style={{ height: "100vh", width: "100%" }}></div>
