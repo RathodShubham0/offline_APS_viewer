@@ -7,7 +7,7 @@ const Viewer = () => {
   const [accessToken, setAccessToken] = useState(null);
 
   // Local and online model paths
-  const LOCAL_MODEL_PATH = "http://192.168.127.12:8000/svf_bundle/svf_file/bundle/output.svf"; // Ensure this is hosted via a static server with proper CORS headers
+  const LOCAL_MODEL_PATH = "http://192.168.1.240:8000/output.svf"; // Ensure this is hosted via a static server with proper CORS headers
   const MODEL_URN = "dXJuOmFkc2sud2lwcHJvZDpmcy5maWxlOnZmLjZsRThNSjZuU0ZTQTNhUUczaUJWMkE_dmVyc2lvbj0x";
 
   useEffect(() => {

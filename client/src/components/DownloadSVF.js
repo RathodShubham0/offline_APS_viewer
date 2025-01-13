@@ -88,3 +88,13 @@ const token = " .eyJzY29wZSI6WyJkYXRhOnJlYWQiXSwiY2xpZW50X2lkIjoiVGY0dU9Zc3ZNVjN
 zipSVFBundle(urn, token);
 
 export default zipSVFBundle;
+
+            // Save the SVF file
+            const blob = new Blob([svfContent], { type: 'application/octet-stream' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'output.svf'; // Specify the filename
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            console.log('SVF file downloaded successfully.');

@@ -1,9 +1,8 @@
 import React from 'react';
 import axios from 'axios';
-// import fs from 'fs';
-// import path from 'path';
-// import unzipper from 'unzipper';
 import JSZip from 'jszip';
+import { saveAs } from 'file-saver';
+
 async function generateToken() {
     const url = "https://developer.api.autodesk.com/authentication/v2/token";
     const payload = 'grant_type=client_credentials&scope=data%3Aread';
@@ -57,6 +56,8 @@ async function downloadData() {
 async function downloadSvfFileUrl(manifestData, newUrn, accessToken) {
     const svfUrns = [];
     const derivatives = manifestData.derivatives || [];
+    const zip = new JSZip();
+
     for (const item of derivatives) {
         if (item.children) {
             for (const child of item.children) {
@@ -70,6 +71,7 @@ async function downloadSvfFileUrl(manifestData, newUrn, accessToken) {
             }
         }
     }
+
     if (svfUrns.length > 0) {
         const svfUrn = svfUrns[0];
         const url = `https://developer.api.autodesk.com/modelderivative/v2/designdata/${newUrn}/manifest/${svfUrn}`;
@@ -78,17 +80,23 @@ async function downloadSvfFileUrl(manifestData, newUrn, accessToken) {
             // Fetch SVF file
             const response = await axios.get(url, { headers, responseType: 'arraybuffer' });
             const svfContent = response.data;
+
+            // Add output.svf to ZIP
+            zip.file('output.svf', svfContent);
+
             // Extract ZIP contents
-            const zip = await JSZip.loadAsync(svfContent);
-            const manifestFile = zip.file('manifest.json');
+            const zipContent = await JSZip.loadAsync(svfContent);
+            const manifestFile = zipContent.file('manifest.json');
             if (!manifestFile) {
                 console.error('manifest.json not found in the ZIP file.');
                 return;
             }
+
             // Parse manifest.json
             const manifestData = JSON.parse(await manifestFile.async('string'));
             const assets = manifestData.assets;
-            // Download and save assets
+
+            // Download and add assets to ZIP
             for (const asset of assets) {
                 const uriFilename = asset.URI;
                 let modifiedUrn;
@@ -102,16 +110,15 @@ async function downloadSvfFileUrl(manifestData, newUrn, accessToken) {
                 if (modifiedUrn) {
                     const assetUrl = `https://developer.api.autodesk.com/modelderivative/v2/designdata/${newUrn}/manifest/${modifiedUrn}`;
                     const assetResponse = await axios.get(assetUrl, { headers, responseType: 'arraybuffer' });
-                    // Save the asset as a downloadable file
-                    const blob = new Blob([assetResponse.data]);
-                    const link = document.createElement('a');
-                    link.href = URL.createObjectURL(blob);
-                    link.download = uriFilename.split('/').pop(); // Extract the filename
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
+                    const filename = uriFilename.split('/').pop();
+                    zip.file(filename, assetResponse.data);
                 }
             }
+
+            // Generate and download the ZIP
+            const zipBlob = await zip.generateAsync({ type: 'blob' });
+            saveAs(zipBlob, 'model-assets.zip');
+
             console.log('SVF file and assets downloaded successfully.');
         } catch (error) {
             console.error('Error downloading SVF file:', error.message);

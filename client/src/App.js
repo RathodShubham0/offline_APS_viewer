@@ -14,12 +14,12 @@ class App extends React.Component {
     return (
       <div className="app">
         <SvfDownloader/>
-        {/* <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+        <div style={{ position: 'relative', width: '100%', height: '100%' }}>
           <Viewer
             ref={ref => this.wrapper = ref}
           />
 
-        </div> */}
+        </div>
       </div>
     );
   }
