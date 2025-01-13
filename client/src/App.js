@@ -1,7 +1,7 @@
 import './App.css';
 import React from 'react';
 import Viewer from './Viewer/Viewer';
-import svfd from  '../src/components/svfd';
+import  SvfDownloader from './components/svfd';
 class App extends React.Component {
   constructor(props) {
     super(props);
@@ -13,13 +13,13 @@ class App extends React.Component {
      
     return (
       <div className="app">
-        <svfd/>
-        <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+        <SvfDownloader/>
+        {/* <div style={{ position: 'relative', width: '100%', height: '100%' }}>
           <Viewer
             ref={ref => this.wrapper = ref}
           />
 
-        </div>
+        </div> */}
       </div>
     );
   }

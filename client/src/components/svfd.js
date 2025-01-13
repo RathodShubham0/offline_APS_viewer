@@ -1,5 +1,9 @@
 import React from 'react';
-
+import axios from 'axios';
+// import fs from 'fs';
+// import path from 'path';
+// import unzipper from 'unzipper';
+import JSZip from 'jszip';
 async function generateToken() {
     const url = "https://developer.api.autodesk.com/authentication/v2/token";
     const payload = 'grant_type=client_credentials&scope=data%3Aread';
@@ -20,7 +24,7 @@ async function generateToken() {
 }
 
 async function downloadData() {
-    const res = { model_urn: 'your_model_urn_here' }; // Replace with actual model URN
+    const res = { model_urn: 'dXJuOmFkc2sud2lwcHJvZDpmcy5maWxlOnZmLjZsRThNSjZuU0ZTQTNhUUczaUJWMkE_dmVyc2lvbj0x' }; // Replace with actual model URN
     const new_urn = res.model_urn;
     const access_token = await generateToken();
 
@@ -50,48 +54,70 @@ async function downloadData() {
     }
 }
 
-async function downloadSvfFileUrl(manifest_data, new_urn, access_token) {
-    const svf_urns = [];
-    const derivatives = manifest_data.derivatives;
-
-    derivatives.forEach(item => {
+async function downloadSvfFileUrl(manifestData, newUrn, accessToken) {
+    const svfUrns = [];
+    const derivatives = manifestData.derivatives || [];
+    for (const item of derivatives) {
         if (item.children) {
-            item.children.forEach(child => {
+            for (const child of item.children) {
                 if (child.children) {
-                    child.children.forEach(sub_child => {
-                        if (sub_child.mime === "application/autodesk-svf") {
-                            svf_urns.push(sub_child.urn);
+                    for (const subChild of child.children) {
+                        if (subChild.mime === 'application/autodesk-svf') {
+                            svfUrns.push(subChild.urn);
                         }
-                    });
+                    }
                 }
-            });
+            }
         }
-    });
-
-    if (svf_urns.length > 0) {
-        const svf_urn = svf_urns[0];
-        const url = `https://developer.api.autodesk.com/modelderivative/v2/designdata/${new_urn}/manifest/${svf_urn}`;
-        const headers = {
-            'Authorization': `Bearer ${access_token}`
-        };
-
-        const response = await fetch(url, { headers: headers });
-        if (response.status === 200) {
-            const svf_content = await response.blob();
-            const svf_url = URL.createObjectURL(svf_content);
-            const a = document.createElement('a');
-            a.href = svf_url;
-            a.download = 'output.svf';
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-
-            console.log("SVF file downloaded successfully.");
-        } else {
-            console.log("Failed to download SVF file.");
+    }
+    if (svfUrns.length > 0) {
+        const svfUrn = svfUrns[0];
+        const url = `https://developer.api.autodesk.com/modelderivative/v2/designdata/${newUrn}/manifest/${svfUrn}`;
+        const headers = { Authorization: `Bearer ${accessToken}` };
+        try {
+            // Fetch SVF file
+            const response = await axios.get(url, { headers, responseType: 'arraybuffer' });
+            const svfContent = response.data;
+            // Extract ZIP contents
+            const zip = await JSZip.loadAsync(svfContent);
+            const manifestFile = zip.file('manifest.json');
+            if (!manifestFile) {
+                console.error('manifest.json not found in the ZIP file.');
+                return;
+            }
+            // Parse manifest.json
+            const manifestData = JSON.parse(await manifestFile.async('string'));
+            const assets = manifestData.assets;
+            // Download and save assets
+            for (const asset of assets) {
+                const uriFilename = asset.URI;
+                let modifiedUrn;
+                if (uriFilename.startsWith('../../')) {
+                    const index = svfUrn.indexOf('{3D}.svf');
+                    modifiedUrn = svfUrn.slice(0, index) + uriFilename;
+                } else if (!uriFilename.startsWith('embed:')) {
+                    const lastSlashIndex = svfUrn.lastIndexOf('/');
+                    modifiedUrn = svfUrn.slice(0, lastSlashIndex + 1) + uriFilename;
+                }
+                if (modifiedUrn) {
+                    const assetUrl = `https://developer.api.autodesk.com/modelderivative/v2/designdata/${newUrn}/manifest/${modifiedUrn}`;
+                    const assetResponse = await axios.get(assetUrl, { headers, responseType: 'arraybuffer' });
+                    // Save the asset as a downloadable file
+                    const blob = new Blob([assetResponse.data]);
+                    const link = document.createElement('a');
+                    link.href = URL.createObjectURL(blob);
+                    link.download = uriFilename.split('/').pop(); // Extract the filename
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                }
+            }
+            console.log('SVF file and assets downloaded successfully.');
+        } catch (error) {
+            console.error('Error downloading SVF file:', error.message);
         }
     } else {
-        console.log("No SVF URNs found in the manifest data.");
+        console.error('No SVF URNs found in the manifest data.');
     }
 }
 
