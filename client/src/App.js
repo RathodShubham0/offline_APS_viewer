@@ -18,6 +18,7 @@ class App extends React.Component {
           <Viewer
             ref={ref => this.wrapper = ref}
           />
+
         </div>
       </div>
     );
