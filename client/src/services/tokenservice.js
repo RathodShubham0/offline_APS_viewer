@@ -3,7 +3,7 @@ export const generateToken = async () => {
     const payload = 'grant_type=client_credentials&scope=data%3Aread';
     const headers = {
         'Content-Type': 'application/x-www-form-urlencoded',
-        'Authorization': 'Basic VGY0dU9Zc3ZNVjN4RWpBOHVpUUg1QWlYV01YR290Nm4xWFp5cGhFTFRKV1BxNHN6OnM5ZVR4Nm54UG1HeTFsQm1LV1VSVHdyaDFvaDJ6ak1laHc3VXhGMG85cThoWE5CdGFFYWN3eGFDQURPSTBGRXc=',
+        'Authorization': 'Basic dGd4V2F6WWN2SGc1Q3ByQmlOVksxZFFaTGtsNGF0Zjg6OXlMSWFudWg0QmZRbWRGcw==',
         'Accept': 'application/json'
     };
 

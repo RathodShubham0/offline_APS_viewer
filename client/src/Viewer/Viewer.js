@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 /* global Autodesk */
- 
+ import { generateToken } from "../services/tokenservice";
 const Viewer =  React.forwardRef((props, ref)  => {
   const viewerDiv = useRef(null);
   const [viewer, setViewer] = useState(null);
@@ -12,36 +12,7 @@ const Viewer =  React.forwardRef((props, ref)  => {
 
   useEffect(() => {
     // Fetch Autodesk access token
-    const fetchToken = async () => {
-      try {
-        const response = await fetch(
-          "https://developer.api.autodesk.com/authentication/v2/token",
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/x-www-form-urlencoded",
-              Accept: "application/json",
-              Authorization: "Basic VGY0dU9Zc3ZNVjN4RWpBOHVpUUg1QWlYV01YR290Nm4xWFp5cGhFTFRKV1BxNHN6OnM5ZVR4Nm54UG1HeTFsQm1LV1VSVHdyaDFvaDJ6ak1laHc3VXhGMG85cThoWE5CdGFFYWN3eGFDQURPSTBGRXc=", // Replace with your encoded client_id:client_secret
-            },
-            body: new URLSearchParams({
-              grant_type: "client_credentials",
-              scope: "data:read",
-            }),
-          }
-        );
-
-        if (!response.ok) {
-          throw new Error(`Failed to fetch token: ${response.statusText}`);
-        }
-
-        const data = await response.json();
-        setAccessToken(data.access_token);
-      } catch (error) {
-        console.error("Error fetching access token:", error);
-      }
-    };
-
-    fetchToken();
+    setAccessToken(generateToken());
   }, []);
 
   // Load local model
@@ -131,7 +102,7 @@ const Viewer =  React.forwardRef((props, ref)  => {
 
   return (
     <div>
-      <div id="viewerDiv" ref={viewerDiv} style={{ height: "92vh", width: "100%" }}></div>
+      <div id="viewerDiv" ref={viewerDiv} style={{ height: "9vh", width: "100%" }}></div>
     </div>
   );
 });
