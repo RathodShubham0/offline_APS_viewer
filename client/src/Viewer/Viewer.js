@@ -1,13 +1,13 @@
 import React, { useEffect, useRef, useState } from "react";
 /* global Autodesk */
-import SvfDownloader from "../components/SvfDownloader";
-const Viewer = () => {
+ 
+const Viewer =  React.forwardRef((props, ref)  => {
   const viewerDiv = useRef(null);
   const [viewer, setViewer] = useState(null);
   const [accessToken, setAccessToken] = useState(null);
 
   // Local and online model paths
-  const LOCAL_MODEL_PATH = "http://192.168.1.240:8000/svf_bundle/bundle/output.svf"; // Ensure this is hosted via a static server with proper CORS headers
+  const LOCAL_MODEL_PATH = "/svf_bundle/svf_file/bundle/output.svf"; // Ensure this is hosted via a static server with proper CORS headers
   const MODEL_URN = "dXJuOmFkc2sud2lwcHJvZDpmcy5maWxlOnZmLjZsRThNSjZuU0ZTQTNhUUczaUJWMkE_dmVyc2lvbj0x";
 
   useEffect(() => {
@@ -99,7 +99,16 @@ const Viewer = () => {
 
   // Toggle between online and local models
   const handleToggle = () => {
-    if (!viewer) {
+     
+    if(viewer){
+      viewer.tearDown();
+      viewer.finish();
+      setViewer(null);
+     
+    }
+      
+    if (viewer==null) {
+      //debugger;
       const viewerInstance = new Autodesk.Viewing.GuiViewer3D(viewerDiv.current);
       viewerInstance.start();
       setViewer(viewerInstance);
@@ -112,38 +121,19 @@ const Viewer = () => {
         loadOnlineModel(viewerInstance);
         status.innerText = "Model: Online";
       }
-    } else {
-      viewer.tearDown();
-      viewer.finish();
-      setViewer(null);
-    }
+    }  
   };
 
-  // Download the SVF bundle
-  const downloadSvfBundle = () => {
-    fetch("http://127.0.0.1:5000/download_svf_bundle", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ model_urn: MODEL_URN }),
-    })
-      .then((response) => response.text())
-      .then((result) => console.log("SVF bundle downloaded:", result))
-      .catch((error) => console.error("Error downloading SVF bundle:", error));
-  };
+  React.useImperativeHandle(ref, () => ({
+    handleToggle,
+  }));
+
 
   return (
     <div>
-      <nav className="navbar">
-        <h4>Offline Viewer</h4>
-        <div className="toggle-container">
-          <button onClick={handleToggle}>Toggle Model</button>
-          <div id="status">Model: Online</div>
-          <SvfDownloader/>
-        </div>
-      </nav>
-      <div id="viewerDiv" ref={viewerDiv} style={{ height: "100vh", width: "100%" }}></div>
+      <div id="viewerDiv" ref={viewerDiv} style={{ height: "92vh", width: "100%" }}></div>
     </div>
   );
-};
+});
 
 export default Viewer;
