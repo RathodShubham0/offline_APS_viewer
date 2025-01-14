@@ -4,7 +4,8 @@ import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
 import { Spinner } from 'react-bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
-
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 class SvfDownloader extends Component {
     state = {
         loading: false,
@@ -15,18 +16,28 @@ class SvfDownloader extends Component {
         const payload = 'grant_type=client_credentials&scope=data%3Aread';
         const headers = {
             'Content-Type': 'application/x-www-form-urlencoded',
-            'Authorization': 'Basic VGY0dU9Zc3ZNVjN4RWpBOHVpUUg1QWlYV01YR290Nm4xWFp5cGhFTFRKV1BxNHN6OnM5ZVR4Nm54UG1HeTFsQm1LV1VSVHdyaDFvaDJ6ak1laHc3VXhGMG85cThoWE5CdGFFYWN3eGFDQURPSTBGRXc=',
+            'Authorization': 'Basic  GY0dU9Zc3ZNVjN4RWpBOHVpUUg1QWlYV01YR290Nm4xWFp5cGhFTFRKV1BxNHN6OnM5ZVR4Nm54UG1HeTFsQm1LV1VSVHdyaDFvaDJ6ak1laHc3VXhGMG85cThoWE5CdGFFYWN3eGFDQURPSTBGRXc=',
             'Accept': 'application/json'
         };
 
-        const response = await fetch(url, {
-            method: 'POST',
-            headers: headers,
-            body: payload
-        });
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: headers,
+                body: payload
+            });
 
-        const data = await response.json();
-        return data.access_token;
+            if (!response.ok) {
+                throw new Error(`Failed to fetch token: ${response.statusText}`);
+            }
+
+            const data = await response.json();
+            return data.access_token;
+        } catch (error) {
+            console.error("Error fetching access token:", error);
+            toast.error("Failed to fetch access token. Please check your internet connection.");
+            throw error;
+        }
     };
 
     downloadData = async () => {
@@ -141,7 +152,7 @@ class SvfDownloader extends Component {
         const { loading } = this.state;
 
         return (
-            <div>
+            <div>  <ToastContainer />
                 <button onClick={this.downloadData}>Download SVF<div>
                     {loading && <Spinner animation="border" role="status">
                     <span className="sr-only"></span>
