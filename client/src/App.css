@@ -24,25 +24,16 @@
   color: white;
 }
 
-.App-link {
-  color: #61dafb;
-}
-
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.min-letter-spacing {
+  letter-spacing: 0.9px; /* Adjust the value as needed */
 }
 .navbar {
   background-color: #1d1d1d;
   color: white;
-  padding: 10px;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  height: 60px;
 }
 
 .navbar h4 {
@@ -55,7 +46,7 @@
 }
 
 .toggle-container button {
-  background-color: #007bff;
+  background-color: #e0e0e0a6;
   color: white;
   border: none;
   padding: 10px;
@@ -65,7 +56,8 @@
 }
 
 .toggle-container button:hover {
-  background-color: #0056b3;
+  background-color: #c4bfbf;
+  color: black;
 }
 
 #status {
@@ -74,5 +66,5 @@
 
 #viewerDiv {
   border: 1px solid #ccc;
-  margin-top: 10px;
+ 
 }
