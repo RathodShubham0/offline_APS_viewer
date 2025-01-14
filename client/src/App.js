@@ -1,7 +1,8 @@
 import './App.css';
 import React from 'react';
 import Viewer from './Viewer/Viewer';
- 
+import { Navbar } from './components/Navbar';
+
 class App extends React.Component {
   constructor(props) {
     super(props);
@@ -9,16 +10,18 @@ class App extends React.Component {
 
   }
 
+  handleToggle = () => {
+    if (this.wrapper) {
+      this.wrapper.handleToggle();
+    }
+  };
+
   render() {
-     
     return (
       <div className="app">
-       
+        <Navbar handleToggle={this.handleToggle} />
         <div style={{ position: 'relative', width: '100%', height: '100%' }}>
-          <Viewer
-            ref={ref => this.wrapper = ref}
-          />
-
+          <Viewer ref={ref => this.wrapper = ref} />
         </div>
       </div>
     );
