@@ -3,6 +3,7 @@ import React from 'react';
 import Viewer from './Viewer/Viewer';
 import { Navbar } from './components/Navbar';
 import Dashboard from './components/Dashboard';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 
 class App extends React.Component {
   constructor(props) {
@@ -19,14 +20,19 @@ class App extends React.Component {
 
   render() {
     return (
-      <div className="app">
-        <Dashboard />
+      <Router>
+        <div>
+        <div className="app">
         <Navbar handleToggle={this.handleToggle} />
-        <div style={{ position: 'relative', width: '100%', height: '100%' }}>
-          <Viewer ref={ref => this.wrapper = ref} />
-        </div>
       </div>
+          <Routes>
+            <Route path="/" element={<Viewer ref={ref => this.wrapper = ref} style={{ position: 'relative', width: '100%', height: '90vh' }} />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+          </Routes>
+        </div>
+      </Router>
     );
+    
   }
 }
 

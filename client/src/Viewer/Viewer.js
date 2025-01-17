@@ -8,7 +8,7 @@ const Viewer =  React.forwardRef((props, ref)  => {
 
   // Local and online model paths
   const LOCAL_MODEL_PATH = "/svf_bundle/svf_file/bundle/output.svf"; // Ensure this is hosted via a static server with proper CORS headers
-  const MODEL_URN = "dXJuOmFkc2sud2lwcHJvZDpmcy5maWxlOnZmLjZsRThNSjZuU0ZTQTNhUUczaUJWMkE_dmVyc2lvbj0x";
+  const MODEL_URN =  'dXJuOmFkc2sud2lwcHJvZDpmcy5maWxlOnZmLi0zSmFSVEZjV2cyYkdJcVBsdEhmOVE_dmVyc2lvbj0x';
 
   useEffect(() => {
     // Fetch Autodesk access token
@@ -34,52 +34,51 @@ const Viewer =  React.forwardRef((props, ref)  => {
   };
 
   // Load online model
-  const loadOnlineModel = (viewerInstance) => {
+  const loadOnlineModel = async (viewerInstance) => {
     if (!accessToken) {
       console.error("Access token is not available. Cannot load online model.");
       return;
     }
-
-    const options = {
-      env: "AutodeskProduction",
-      accessToken,
-    };
-
-    Autodesk.Viewing.Initializer(options, () => {
-      const urn = `urn:${MODEL_URN}`;
-
-      Autodesk.Viewing.Document.load(
-        urn,
-        (doc) => {
-          const viewables = doc.getRoot().search({ type: "geometry" });
-          if (viewables && viewables.length > 0) {
-            viewerInstance
-              .loadDocumentNode(doc, viewables[0], { globalOffset: { x: 0, y: 0, z: 0 } })
-              .then(() => console.log("Online model loaded successfully."))
-              .catch((err) => console.error("Error loading online model:", err));
-          } else {
-            console.error("No viewable geometry found in the document.");
+  
+    try {
+      // Ensure the access token is resolved and valid.
+      const token = await accessToken;  // If accessToken is a promise, await its resolution.
+      const options = {
+        env: "AutodeskProduction",
+        accessToken: token,  // Use the resolved token
+      };
+  
+      Autodesk.Viewing.Initializer(options, () => {
+        const urn = `urn:${MODEL_URN}`;
+  
+        Autodesk.Viewing.Document.load(
+          urn,
+          (doc) => {
+            const viewables = doc.getRoot().search({ type: "geometry" });
+            if (viewables && viewables.length > 0) {
+              viewerInstance
+                .loadDocumentNode(doc, viewables[0], { globalOffset: { x: 0, y: 0, z: 0 } })
+                .then(() => console.log("Online model loaded successfully."))
+                .catch((err) => console.error("Error loading online model:", err));
+            } else {
+              console.error("No viewable geometry found in the document.");
+            }
+          },
+          (errorCode, errorMsg) => {
+            console.error(`Error loading document: ${errorCode} - ${errorMsg}`);
           }
-        },
-        (errorCode, errorMsg) => {
-          console.error(`Error loading document: ${errorCode} - ${errorMsg}`);
-        }
-      );
-    });
+        );
+      });
+    } catch (err) {
+      console.error("Error while loading model:", err);
+    }
   };
+  
+  
 
   // Toggle between online and local models
   const handleToggle = () => {
-     
-    if(viewer){
-      viewer.tearDown();
-      viewer.finish();
-      setViewer(null);
-     
-    }
-      
-    if (viewer==null) {
-      //debugger;
+ 
       const viewerInstance = new Autodesk.Viewing.GuiViewer3D(viewerDiv.current);
       viewerInstance.start();
       setViewer(viewerInstance);
@@ -92,7 +91,11 @@ const Viewer =  React.forwardRef((props, ref)  => {
         loadOnlineModel(viewerInstance);
         status.innerText = "Model: Online";
       }
-    }  
+     if(viewer){
+      viewer.tearDown();
+      viewer.finish();
+      setViewer(null);
+     }
   };
 
   React.useImperativeHandle(ref, () => ({

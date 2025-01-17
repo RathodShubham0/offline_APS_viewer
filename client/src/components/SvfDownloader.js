@@ -11,10 +11,12 @@ class SvfDownloader extends Component {
     state = {
         loading: false,
     };
+     
 
     downloadData = async () => {
+        debugger
         this.setState({ loading: true });
-        const modelUrn = 'dXJuOmFkc2sud2lwcHJvZDpmcy5maWxlOnZmLjZsRThNSjZuU0ZTQTNhUUczaUJWMkE_dmVyc2lvbj0x'; // Replace with actual model URN
+        const modelUrn =  "dXJuOmFkc2sud2lwcHJvZDpmcy5maWxlOnZmLi0zSmFSVEZjV2cyYkdJcVBsdEhmOVE_dmVyc2lvbj0x"; // Replace with actual model URN
         const accessToken = await  generateToken();
 
         const baseUrl = "https://developer.api.autodesk.com/modelderivative/v2/designdata";
@@ -127,9 +129,7 @@ class SvfDownloader extends Component {
             <div>  <ToastContainer />
                 <button onClick={this.downloadData}>Download SVF<div>
                     {loading && <Spinner animation="border" role="status">
-                    <span className="sr-only"></span>
-                </Spinner>}</div></button>
-                
+                </Spinner>}</div></button>   
             </div>
         );
     }
