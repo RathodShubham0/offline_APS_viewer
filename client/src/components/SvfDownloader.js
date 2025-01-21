@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
@@ -7,20 +7,41 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { generateToken } from '../services/tokenservice';
-class SvfDownloader extends Component {
-    state = {
-        loading: false,
-    };
-     
+import { useParams } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 
-    downloadData = async () => {
-        debugger
-        this.setState({ loading: true });
-        const modelUrn =  "dXJuOmFkc2sud2lwcHJvZDpmcy5maWxlOnZmLi0zSmFSVEZjV2cyYkdJcVBsdEhmOVE_dmVyc2lvbj0x"; // Replace with actual model URN
-        const accessToken = await  generateToken();
+const SvfDownloader = () => {
+    const [loading, setLoading] = useState(false);
+    const [encodedUrn, setEncodedUrn] = useState('');
+    const location = useLocation();
+    const { modelUrn } = useParams(); 
+
+    useEffect(() => {
+        const getVersionFromQuery = () => {
+            const queryString = location.search; // Get the query string (e.g., "?version=2")
+            const params = new URLSearchParams(queryString); // Parse query string
+            return params.get("version"); // Get the "version" parameter
+        };
+
+        const version = getVersionFromQuery();
+
+        const encodeForAPSViewer = (urn) => {
+            let base64 = btoa(urn);
+            base64 = base64.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+            return base64;
+        };
+
+        const urnWithVersion = version ? `${modelUrn}?version=${version}` : modelUrn;
+        const encodedUrn = encodeForAPSViewer(urnWithVersion);
+        setEncodedUrn(encodedUrn);
+    }, [location.search, modelUrn]);
+
+    const downloadData = async () => {
+        setLoading(true);
+        const accessToken = await generateToken();
 
         const baseUrl = "https://developer.api.autodesk.com/modelderivative/v2/designdata";
-        const endpoint = `${baseUrl}/${modelUrn}/manifest`;
+        const endpoint = `${baseUrl}/${encodedUrn}/manifest`;
 
         const headers = {
             'Authorization': `Bearer ${accessToken}`
@@ -34,20 +55,20 @@ class SvfDownloader extends Component {
             console.log("Status of manifest:", status);
 
             if (status === "success") {
-                await this.downloadSvfFiles(manifestData, modelUrn, accessToken);
+                await downloadSvfFiles(manifestData, encodedUrn, accessToken);
             } else if (status === "failed") {
                 console.log("Manifest processing failed.");
             } else if (status === "pending" || status === "inprogress") {
-                setTimeout(this.downloadData, 10000); // Retry after 10 seconds
+                setTimeout(downloadData, 10000); // Retry after 10 seconds
             }
         } catch (error) {
             console.error("An error occurred:", error);
         } finally {
-            this.setState({ loading: false });
+            setLoading(false);
         }
     };
 
-    downloadSvfFiles = async (manifestData, modelUrn, accessToken) => {
+    const downloadSvfFiles = async (manifestData, encodedUrn, accessToken) => {
         const svfUrns = [];
         const derivatives = manifestData.derivatives || [];
         const zip = new JSZip();
@@ -68,7 +89,7 @@ class SvfDownloader extends Component {
 
         if (svfUrns.length > 0) {
             const svfUrn = svfUrns[0];
-            const url = `https://developer.api.autodesk.com/modelderivative/v2/designdata/${modelUrn}/manifest/${svfUrn}`;
+            const url = `https://developer.api.autodesk.com/modelderivative/v2/designdata/${encodedUrn}/manifest/${svfUrn}`;
             const headers = { Authorization: `Bearer ${accessToken}` };
             try {
                 // Fetch SVF file
@@ -102,7 +123,7 @@ class SvfDownloader extends Component {
                         modifiedUrn = svfUrn.slice(0, lastSlashIndex + 1) + uriFilename;
                     }
                     if (modifiedUrn) {
-                        const assetUrl = `https://developer.api.autodesk.com/modelderivative/v2/designdata/${modelUrn}/manifest/${modifiedUrn}`;
+                        const assetUrl = `https://developer.api.autodesk.com/modelderivative/v2/designdata/${encodedUrn}/manifest/${modifiedUrn}`;
                         const assetResponse = await axios.get(assetUrl, { headers, responseType: 'arraybuffer' });
                         const filename = uriFilename.split('/').pop();
                         zip.file(filename, assetResponse.data);
@@ -122,17 +143,17 @@ class SvfDownloader extends Component {
         }
     };
 
-    render() {
-        const { loading } = this.state;
-
-        return (
-            <div>  <ToastContainer />
-                <button onClick={this.downloadData}>Download SVF<div>
-                    {loading && <Spinner animation="border" role="status">
-                </Spinner>}</div></button>   
-            </div>
-        );
-    }
-}
+    return (
+        <div>
+            <ToastContainer />
+            <button onClick={downloadData}>
+                Download SVF
+                <div>
+                    {loading && <Spinner animation="border" role="status"></Spinner>}
+                </div>
+            </button>
+        </div>
+    );
+};
 
 export default SvfDownloader;

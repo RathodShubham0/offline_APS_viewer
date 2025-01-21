@@ -1,6 +1,6 @@
 // src/components/Navbar.js
 import React from 'react';
-import   SvfDownloader   from './SvfDownloader';
+ 
  
 
 export function Navbar({handleToggle}){
@@ -16,7 +16,7 @@ export function Navbar({handleToggle}){
               <a href="/dashboard">Dashboard</a>
             </li>
           <button  id="status"  onClick={()=>{handleToggle();   }}    >Model: Online </button>
-          <SvfDownloader/>
+          
         </div>
       </nav>
  
