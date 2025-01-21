@@ -2,11 +2,12 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { generateToken } from '../services/tokenservice';
 import { Spinner } from 'react-bootstrap';
+import { useNavigate } from 'react-router-dom';
 
 function Dashboard() {
   const [models, setModels] = useState([]);
   const [loading, setLoading] = useState(false);
- 
+  const navigate = useNavigate();
   const fetchFolderContents = async (projectId, folderId, accessToken) => {
     let allItems = [];
     let nextUrl = `https://developer.api.autodesk.com/data/v1/projects/${projectId}/folders/${folderId}/contents`;
@@ -121,27 +122,25 @@ function Dashboard() {
             <th scope="col">Creation Time</th>
             <th scope="col">Created By</th>
             <th scope="col">Last Modified</th>
+            <th scope="col">URN s</th>
             <th scope="col">View Link</th>
           </tr>
         </thead>
         <tbody>    {loading && <Spinner animation="border" role="status">
  
- </Spinner>} 
+        </Spinner>} 
           {models.map((model) => (
             <tr key={model.id}>
               <td>{model.attributes.displayName}</td>
               <td>{new Date(model.attributes.createTime).toLocaleString()}</td>
               <td>{model.attributes.createUserName}</td>
               <td>{new Date(model.attributes.lastModifiedTime).toLocaleString()}</td>
+              <td>{model.relationships?.tip?.data?.id || 'N/A'}</td>
               <td>
-                <a
-                  href={model.links.webView.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="btn btn-secondary btn-sm"
-                >
-                  View Model
-                </a>
+              <button 
+                    className="btn btn-primary"  onClick={() => navigate(`/viewer/${model.relationships?.tip?.data?.id}`)}
+                  >                  View Model
+                </button>
               </td>
             </tr>
           ))}
