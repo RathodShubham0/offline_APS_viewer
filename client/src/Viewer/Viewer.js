@@ -1,22 +1,58 @@
 import React, { useEffect, useRef, useState } from "react";
+import { useParams } from "react-router-dom";
 /* global Autodesk */
+import { useLocation } from "react-router-dom";
+import SvfDownloader from "../components/SvfDownloader";
  import { generateToken } from "../services/tokenservice";
 const Viewer =  React.forwardRef((props, ref)  => {
   const viewerDiv = useRef(null);
   const [viewer, setViewer] = useState(null);
   const [accessToken, setAccessToken] = useState(null);
-
+  const { modelUrn } = useParams(); 
+  const [model_Urn, setmodel_Urn] = useState('');
   // Local and online model paths
   const LOCAL_MODEL_PATH = "/svf_bundle/svf_file/bundle/output.svf"; // Ensure this is hosted via a static server with proper CORS headers
-  const MODEL_URN =  'dXJuOmFkc2sud2lwcHJvZDpmcy5maWxlOnZmLi0zSmFSVEZjV2cyYkdJcVBsdEhmOVE_dmVyc2lvbj0x';
+    
+  const location = useLocation();
+  
 
-  useEffect(() => {
+  
+  
+  useEffect(async () => {
+    const getVersionFromQuery = () => {
+      const queryString = location.search; // Get the query string (e.g., "?version=2")
+      const params = new URLSearchParams(queryString); // Parse query string
+      return params.get("version"); // Get the "version" parameter
+    };
+    
+    // Replace this with the actual modelURN you receive
+    const version = getVersionFromQuery();
+    
+    const encodeForAPSViewer = (urn) => {
+      let base64 = btoa(urn);
+    
+      // Make it URL-safe
+      base64 = base64.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+       console.log("base64",base64);
+      return base64;
+    };
+    
+    const urnWithVersion = version ? `${modelUrn}?version=${version}` : modelUrn;
+    const encodedUrn = encodeForAPSViewer(urnWithVersion);
+    setmodel_Urn(encodedUrn);
+  
     // Fetch Autodesk access token
-    setAccessToken(generateToken());
+    setAccessToken(await generateToken());
+
+    loadOnlineModel();
   }, []);
 
   // Load local model
-  const loadLocalModel = (viewerInstance) => {
+  const loadLocalModel = ( ) => {
+     
+    const viewerInstance = new Autodesk.Viewing.GuiViewer3D(viewerDiv.current);
+    viewerInstance.start();
+    setViewer(viewerInstance);
     const options = {
       env: "Local",
       useADP: false, // Ensures the viewer doesn't use Autodesk's cloud services
@@ -34,7 +70,11 @@ const Viewer =  React.forwardRef((props, ref)  => {
   };
 
   // Load online model
-  const loadOnlineModel = async (viewerInstance) => {
+  const loadOnlineModel = async ( ) => {
+        
+      const viewerInstance = new Autodesk.Viewing.GuiViewer3D(viewerDiv.current);
+      viewerInstance.start();
+      setViewer(viewerInstance);                        
     if (!accessToken) {
       console.error("Access token is not available. Cannot load online model.");
       return;
@@ -49,7 +89,7 @@ const Viewer =  React.forwardRef((props, ref)  => {
       };
   
       Autodesk.Viewing.Initializer(options, () => {
-        const urn = `urn:${MODEL_URN}`;
+        const urn = `urn:${model_Urn}`;
   
         Autodesk.Viewing.Document.load(
           urn,
@@ -78,17 +118,14 @@ const Viewer =  React.forwardRef((props, ref)  => {
 
   // Toggle between online and local models
   const handleToggle = () => {
- 
-      const viewerInstance = new Autodesk.Viewing.GuiViewer3D(viewerDiv.current);
-      viewerInstance.start();
-      setViewer(viewerInstance);
+
 
       const status = document.getElementById("status");
       if (status.innerText === "Model: Online") {
-        loadLocalModel(viewerInstance);
+        loadLocalModel();
         status.innerText = "Model: Offline";
       } else {
-        loadOnlineModel(viewerInstance);
+        loadOnlineModel();
         status.innerText = "Model: Online";
       }
      if(viewer){
@@ -103,10 +140,12 @@ const Viewer =  React.forwardRef((props, ref)  => {
   }));
 
 
-  return (
+  return (<>
+      <SvfDownloader/>
     <div>
       <div id="viewerDiv" ref={viewerDiv} style={{ height: "9vh", width: "100%" }}></div>
     </div>
+  </>
   );
 });
 
